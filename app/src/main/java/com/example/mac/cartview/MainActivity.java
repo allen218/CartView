@@ -6,6 +6,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 
+import com.example.mac.cartview.view.CartView;
+
 public class MainActivity extends AppCompatActivity {
 
     private Button mBtn;
