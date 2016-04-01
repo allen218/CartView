@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <RelativeLayout
+        android:id="@+id/detail_cart_layout"
+        android:layout_width="50dp"
+        android:layout_height="50dp">
+
+        <Button
+            android:id="@+id/detail_cart_btn"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginTop="5dp"
+            android:background="@drawable/shopping_cart_btn_selector" />
+
+
+        <TextView
+            android:id="@+id/detail_addcart_anim_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignLeft="@id/detail_cart_btn"
+            android:gravity="center_horizontal"
+            android:paddingBottom="10dp"
+            android:text="+1"
+            android:textColor="@color/xiu_red"
+            android:textSize="16sp"
+            android:visibility="gone" />
+
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_toRightOf="@+id/detail_cart_layout"
+        android:layout_marginLeft="-25dp"
+        android:background="@drawable/shopping_cart_num_ic">
+
+        <TextView
+            android:id="@+id/detail_cart_num_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="0"
+            android:textColor="@color/xiu_red"
+            android:textSize="10sp" />
+    </RelativeLayout>
+</RelativeLayout>
+
+
