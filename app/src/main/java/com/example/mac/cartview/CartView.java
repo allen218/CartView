@@ -27,7 +27,7 @@ import android.widget.Scroller;
 import android.widget.TextView;
 
 /**
- * Created by mac on 16/3/30.
+ * Created by allen on 16/3/30.
  */
 public class CartView extends RelativeLayout {
     private Button mCartBtn;
@@ -196,6 +196,7 @@ public class CartView extends RelativeLayout {
     private int scrHeight;
 
     private void handleEgdeValue(int moveX, int moveY) {
+
         WindowManager wm = (WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE);
         scrWidth = wm.getDefaultDisplay().getWidth();
         scrHeight = wm.getDefaultDisplay().getHeight();
@@ -262,6 +263,21 @@ public class CartView extends RelativeLayout {
 //            }
 //        });
         showAndHideAnimation();
+
+
+    }
+
+    /**
+     * 购物车抖动
+     * @param targetView
+     */
+    private void shakeAnimation(View targetView) {
+        TranslateAnimation shakeAnimation = new TranslateAnimation(0, 5, 0, 10);
+        shakeAnimation.setInterpolator(getContext(), R.anim.shake_cycle);
+        shakeAnimation.setDuration(500);
+        targetView.startAnimation(shakeAnimation);
+
+
     }
 
     private void showAndHideAnimation() {
@@ -407,6 +423,8 @@ public class CartView extends RelativeLayout {
             }
         }, ADD_CART_TIME - 100);
 
+
+
         animatorSet.addListener(new Animator.AnimatorListener() {
             @Override
             public void onAnimationStart(Animator animation) {
@@ -416,6 +434,7 @@ public class CartView extends RelativeLayout {
             @Override
             public void onAnimationEnd(Animator animation) {
 
+                shakeAnimation(CartView.this);
                 view.setVisibility(GONE);
             }
 
