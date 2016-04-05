@@ -17,7 +17,7 @@ import android.widget.TextView;
 import com.example.mac.cartview.R;
 
 /**
- * Created by mac on 16/4/1.
+ * Created by allen on 16/4/1.
  */
 public class CarViewConfig {
     private Context mContext;

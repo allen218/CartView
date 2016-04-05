@@ -84,6 +84,8 @@ public class CartView extends RelativeLayout {
 
     private int mCurrentX;
     private int mCurrentY;
+    private static final int moveDiffX = 100;
+    private static final int moveDiffY = 100;
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
@@ -100,11 +102,8 @@ public class CartView extends RelativeLayout {
                 mMoveX = (int) (event.getRawX() + 0.5);
                 mMoveY = (int) (event.getRawY() + 0.5);
 
-                handleEgdeValue(mMoveX, mMoveY);
-
                 mDiffX = mDownX - mMoveX;
                 mDiffY = mDownY - mMoveY;
-
 
                 moveSelf();
 
@@ -117,6 +116,8 @@ public class CartView extends RelativeLayout {
                 mCurrentY = (int) (event.getRawY() + 0.5f);
                 mLocations = new int[2];
                 getLocationOnScreen(mLocations);
+
+                handleEgdeValue(mMoveX, mMoveY);
 
                 moveSelfToEdge();
                 break;
@@ -131,6 +132,8 @@ public class CartView extends RelativeLayout {
             //滑动到右边
 //            ((ViewGroup) getParent()).scrollTo(0, -getCurrentRawY());
             mScroller.startScroll(0, 0, 0, getCurrentRawY());
+
+
             mCurrentCartLocationX = scrWidth - getWidth();
 
         } else {
@@ -139,6 +142,7 @@ public class CartView extends RelativeLayout {
 //            ((ViewGroup) getParent()).scrollTo(scrWidth - getWidth(), -getCurrentRawY());
             mCurrentCartLocationX = 0;
         }
+
         invalidate();
     }
 
@@ -151,10 +155,10 @@ public class CartView extends RelativeLayout {
         super.computeScroll();
     }
 
-    private static final int DIFF_LEFT_WIDTH_VALUE = 80;
-    private static final int DIFF_RIGHT_WIDTH_VALUE = 150;
-    private static final int DIFF_TOP_HEIGHT_VALUE = 450;
-    private static final int DIFF_BOTTOM_HEIGHT_VALUE = 150;
+    private int DIFF_LEFT_WIDTH_VALUE = getWidth();
+    private int DIFF_RIGHT_WIDTH_VALUE = getCurrentScrWidth() - getWidth();
+    private int DIFF_TOP_HEIGHT_VALUE = getHeight();
+    private int DIFF_BOTTOM_HEIGHT_VALUE = getHeight();
 
     /**
      * 处理边缘购物车滑出问题
@@ -165,26 +169,35 @@ public class CartView extends RelativeLayout {
     private int scrWidth;
     private int scrHeight;
 
+    private int getCurrentScrWidth() {
+        return scrWidth;
+    }
+
+    private int getCurrentScrHeight() {
+        return scrHeight;
+    }
+
+
     private void handleEgdeValue(int moveX, int moveY) {
 
         WindowManager wm = (WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE);
         scrWidth = wm.getDefaultDisplay().getWidth();
         scrHeight = wm.getDefaultDisplay().getHeight();
 
-        if (mMoveX < DIFF_LEFT_WIDTH_VALUE) {
+        if (moveX < DIFF_LEFT_WIDTH_VALUE) {
             mMoveX = DIFF_LEFT_WIDTH_VALUE;
         }
 
-        if (mMoveY < DIFF_TOP_HEIGHT_VALUE) {
+        if (moveY < DIFF_TOP_HEIGHT_VALUE) {
             mMoveY = DIFF_TOP_HEIGHT_VALUE;
         }
 
-        if (mMoveX > scrWidth - DIFF_RIGHT_WIDTH_VALUE) {
-            mMoveX = scrWidth - DIFF_RIGHT_WIDTH_VALUE;
+        if (moveX > scrWidth - getWidth()) {
+            mMoveX = scrWidth - getWidth();
         }
 
-        if (mMoveY > scrHeight - DIFF_BOTTOM_HEIGHT_VALUE) {
-            mMoveY = scrHeight - DIFF_BOTTOM_HEIGHT_VALUE;
+        if (moveY > scrHeight - getHeight()) {
+            mMoveY = scrHeight - getHeight();
         }
     }
 
