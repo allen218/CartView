@@ -6,6 +6,25 @@
     tools:context="com.example.mac.cartview.MainActivity">
 
     <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <Button
+            android:id="@+id/btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="动画" />
+
+    </RelativeLayout>
+
+    <ImageView
+        android:id="@+id/shopping_cart_ic"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:src="@drawable/detail_shopping_cart_sel"
+        android:visibility="gone" />
+
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -13,20 +32,8 @@
             android:id="@+id/cart_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            img:cartScr="@drawable/detail_shopping_cart_sel"
             android:layout_alignParentRight="true"
-            android:text="Hello World!" />
+            android:text="Hello World!"
+            img:cartScr="@drawable/detail_shopping_cart_sel" />
     </RelativeLayout>
-
-    <Button
-        android:id="@+id/btn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="动画" />
-
-    <ImageView
-        android:id="@+id/shopping_cart_ic"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:src="@drawable/detail_shopping_cart_sel" />
 </RelativeLayout>

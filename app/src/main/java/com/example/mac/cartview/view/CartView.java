@@ -12,13 +12,14 @@ import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.Scroller;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.mac.cartview.R;
 
 /**
  * Created by allen on 16/3/30.
  */
-public class CartView extends RelativeLayout {
+public class CartView extends RelativeLayout implements View.OnClickListener {
     private Button mCartBtn;
 
     private TextView detail_addcart_anim_tv, detail_cart_num_tv;
@@ -84,8 +85,7 @@ public class CartView extends RelativeLayout {
 
     private int mCurrentX;
     private int mCurrentY;
-    private static final int moveDiffX = 100;
-    private static final int moveDiffY = 100;
+    private static final int MOVE_DIFFY = 100;
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
@@ -105,7 +105,8 @@ public class CartView extends RelativeLayout {
                 mDiffX = mDownX - mMoveX;
                 mDiffY = mDownY - mMoveY;
 
-                moveSelf();
+
+                handleTopEdge();
 
                 mDownX = mMoveX;
                 mDownY = mMoveY;
@@ -125,21 +126,60 @@ public class CartView extends RelativeLayout {
         return false;
     }
 
+    /**
+     * 处理顶部边界问题
+     */
+    private void handleTopEdge() {
+
+        WindowManager wm = (WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE);
+        scrWidth = wm.getDefaultDisplay().getWidth();
+        scrHeight = wm.getDefaultDisplay().getHeight();
+
+        if (mMoveY < 200) {
+            moveEdge();
+        } else
+            moveSelf();
+    }
+
+    private void moveEdge() {
+        ((ViewGroup) getParent()).scrollTo(scrWidth - mMoveX - getWidth(), 0);
+    }
+
     private int mCurrentCartLocationX;
 
     private void moveSelfToEdge() {
         if (getCurrentRawX() > scrWidth / 2) {
             //滑动到右边
 //            ((ViewGroup) getParent()).scrollTo(0, -getCurrentRawY());
-            mScroller.startScroll(0, 0, 0, getCurrentRawY());
+            if (getCurrentRawY() > scrHeight - getHeight() - MOVE_DIFFY) {
 
+                mScroller.startScroll(getCurrentRawX() - scrWidth + getWidth(), getCurrentRawY() - CURRENT_VIEW_DIFFY,
+                        scrWidth - getCurrentRawX() - getWidth(), scrHeight - getCurrentRawY() - CURRENT_VIEW_DIFFY);
+
+            } else if (getCurrentRawY() + CURRENT_VIEW_DIFFY < getHeight()) {
+
+                mScroller.startScroll(getCurrentRawX() - scrWidth + getWidth(), 0, scrWidth - getCurrentRawX() - getWidth(), 0);
+
+            } else {
+                mScroller.startScroll(getCurrentRawX() - scrWidth + getWidth(), getCurrentRawY(), scrWidth - getCurrentRawX() - getWidth(), 0);
+            }
 
             mCurrentCartLocationX = scrWidth - getWidth();
 
         } else {
             //滑动到左边
-            mScroller.startScroll(scrWidth - getWidth(), 0, 0, getCurrentRawY());
-//            ((ViewGroup) getParent()).scrollTo(scrWidth - getWidth(), -getCurrentRawY());
+            if (getCurrentRawY() > scrHeight - getHeight() - MOVE_DIFFY) {
+
+                mScroller.startScroll(-scrWidth + getCurrentRawX() + getWidth(), getCurrentRawY() - CURRENT_VIEW_DIFFY,
+                        -getCurrentRawX(), scrHeight - getCurrentRawY() - CURRENT_VIEW_DIFFY);
+
+            } else if (getCurrentRawY() + CURRENT_VIEW_DIFFY < getHeight()) {
+
+                mScroller.startScroll(-scrWidth + getCurrentRawX() + getWidth(), 0, -getCurrentRawX(), 0);
+            } else {
+
+                mScroller.startScroll(-scrWidth + getCurrentRawX() + getWidth(), getCurrentRawY(), -getCurrentRawX(), 0);
+            }
             mCurrentCartLocationX = 0;
         }
 
@@ -149,7 +189,7 @@ public class CartView extends RelativeLayout {
     @Override
     public void computeScroll() {
         if (mScroller.computeScrollOffset()) {
-            ((ViewGroup) getParent()).scrollTo(mScroller.getCurrX(), -getCurrentRawY());
+            ((ViewGroup) getParent()).scrollTo(-mScroller.getCurrX(), -mScroller.getCurrY());
             postInvalidate();
         }
         super.computeScroll();
@@ -158,7 +198,7 @@ public class CartView extends RelativeLayout {
     private int DIFF_LEFT_WIDTH_VALUE = getWidth();
     private int DIFF_RIGHT_WIDTH_VALUE = getCurrentScrWidth() - getWidth();
     private int DIFF_TOP_HEIGHT_VALUE = getHeight();
-    private int DIFF_BOTTOM_HEIGHT_VALUE = getHeight();
+    private int DIFF_BOTTOM_HEIGHT_VALUE = 300;
 
     /**
      * 处理边缘购物车滑出问题
@@ -179,10 +219,6 @@ public class CartView extends RelativeLayout {
 
 
     private void handleEgdeValue(int moveX, int moveY) {
-
-        WindowManager wm = (WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE);
-        scrWidth = wm.getDefaultDisplay().getWidth();
-        scrHeight = wm.getDefaultDisplay().getHeight();
 
         if (moveX < DIFF_LEFT_WIDTH_VALUE) {
             mMoveX = DIFF_LEFT_WIDTH_VALUE;
@@ -215,13 +251,14 @@ public class CartView extends RelativeLayout {
             return mLocations[0] + 20;
     }
 
+    private static final int CURRENT_VIEW_DIFFY = 200;
 
     public int getCurrentRawY() {
 
         if (mLocations == null || mLocations.length <= 0) {
-            return currentViewY - 230;
+            return currentViewY - CURRENT_VIEW_DIFFY;
         } else
-            return mLocations[1] - 230;
+            return mLocations[1] - CURRENT_VIEW_DIFFY;
 
     }
 
@@ -255,4 +292,8 @@ public class CartView extends RelativeLayout {
         return CartView.this;
     }
 
+    @Override
+    public void onClick(View v) {
+        Toast.makeText(mAct, "onclick", Toast.LENGTH_SHORT).show();
+    }
 }
