@@ -5,12 +5,10 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.os.Handler;
+import android.util.DisplayMetrics;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.animation.AccelerateInterpolator;
-import android.view.animation.AlphaAnimation;
-import android.view.animation.Animation;
-import android.view.animation.AnimationSet;
-import android.view.animation.ScaleAnimation;
 import android.view.animation.TranslateAnimation;
 import android.widget.TextView;
 
@@ -42,70 +40,67 @@ public class CarViewConfig {
     public void showAndHideAnimation(final View view, final View numView) {
         view.setVisibility(View.VISIBLE);
 
-        TranslateAnimation moveAnimation = new TranslateAnimation(0, 50, 0, 50);
-        ScaleAnimation scaleAnimation = new ScaleAnimation(1.0f, 0.8f, 1.0f, 0.8f);
-        AnimationSet animationSet = new AnimationSet(true);
-        animationSet.addAnimation(moveAnimation);
-        animationSet.addAnimation(scaleAnimation);
-        animationSet.setDuration(500);
-        view.startAnimation(animationSet);
-
-        animationSet.setAnimationListener(new Animation.AnimationListener() {
+        ObjectAnimator moveXAnimation = ObjectAnimator.ofFloat(view, "translationX", 0f * getCurrentDensity(),
+                8f * getCurrentDensity(), 16f * getCurrentDensity());
+        ObjectAnimator moveYAnimation = ObjectAnimator.ofFloat(view, "translationY", 0f * getCurrentDensity(),
+                8f * getCurrentDensity(), 16f * getCurrentDensity());
+        ObjectAnimator scaleXAnimation = ObjectAnimator.ofFloat(view, "scaleX", 1.0f, 0.9f, 0.8f);
+        ObjectAnimator scaleYAnimation = ObjectAnimator.ofFloat(view, "scaleY", 1.0f, 0.9f, 0.8f);
+        ObjectAnimator alphaAnimation = ObjectAnimator.ofFloat(view, "alpha", 1.0f, 0.9f, 0.8f, 0.3f);
+        AnimatorSet animatorSet = new AnimatorSet();
+        animatorSet.playTogether(moveXAnimation, moveYAnimation, scaleXAnimation, scaleYAnimation, alphaAnimation);
+        animatorSet.setDuration(500);
+        animatorSet.start();
+        animatorSet.addListener(new Animator.AnimatorListener() {
             @Override
-            public void onAnimationStart(Animation animation) {
+            public void onAnimationStart(Animator animation) {
 
             }
 
             @Override
-            public void onAnimationEnd(Animation animation) {
-                handleAddOneAlphaAnimation(view, numView);
+            public void onAnimationEnd(Animator animation) {
+                if (numView instanceof TextView) {
+                    ((TextView) numView).setText(currentNum + "");
+                }
+                view.setVisibility(View.GONE);
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
 
             }
 
             @Override
-            public void onAnimationRepeat(Animation animation) {
+            public void onAnimationRepeat(Animator animation) {
 
             }
         });
 
+    }
 
+    /**
+     * 获得当前屏幕密度
+     *
+     * @return
+     */
+    private float getCurrentDensity() {
+        WindowManager windowManager = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
+        DisplayMetrics metric = new DisplayMetrics();
+        windowManager.getDefaultDisplay().getMetrics(metric);
+        return metric.density;
     }
 
     private int currentNum;
 
+
     /**
-     * +1消失的动画
+     * 设置购物车的数量
      *
-     * @param view
+     * @param num
      */
-    public void handleAddOneAlphaAnimation(final View view, View numView) {
 
-        currentNum++;
-
-        AlphaAnimation alphaAnimation = new AlphaAnimation(1.0f, 0.0f);
-        alphaAnimation.setDuration(500);
-        alphaAnimation.setAnimationListener(new Animation.AnimationListener() {
-            @Override
-            public void onAnimationStart(Animation animation) {
-
-            }
-
-            @Override
-            public void onAnimationEnd(Animation animation) {
-                view.setVisibility(View.GONE);
-
-            }
-
-            @Override
-            public void onAnimationRepeat(Animation animation) {
-
-            }
-        });
-        view.startAnimation(alphaAnimation);
-        if (numView instanceof TextView) {
-            ((TextView) numView).setText(currentNum + "");
-        }
-
+    public void setCurrentNum(int num) {
+        currentNum = num;
 
     }
 

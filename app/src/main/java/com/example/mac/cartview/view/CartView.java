@@ -2,6 +2,7 @@ package com.example.mac.cartview.view;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -28,6 +29,10 @@ public class CartView extends RelativeLayout implements View.OnClickListener {
 
     private CarViewConfig mConfig;
 
+    private static final int LOCATION_CENTER = 1;
+    private static final int LOCATION_TOP = 0;
+    private static final int LOCATION_BOTTOM = 2;
+
     public CartView(Context context) {
         super(context);
     }
@@ -35,7 +40,7 @@ public class CartView extends RelativeLayout implements View.OnClickListener {
     public CartView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
-        initView();
+        initView(attrs);
 
         mScroller = new Scroller(getContext());
 
@@ -54,13 +59,50 @@ public class CartView extends RelativeLayout implements View.OnClickListener {
     private int[] mLocations;
 
 
-    private void initView() {
+    private void initView(AttributeSet attrs) {
         View view = LayoutInflater.from(getContext()).inflate(R.layout.cart_layout, null);
         mCartBtn = (Button) view.findViewById(R.id.detail_cart_btn);
         detail_addcart_anim_tv = (TextView) view.findViewById(R.id.detail_addcart_anim_tv);
         detail_cart_num_tv = (TextView) view.findViewById(R.id.detail_cart_num_tv);
+        getResourceFromXML(attrs);
 
         addView(view);
+    }
+
+
+    private void getResourceFromXML(AttributeSet attrs) {
+        TypedArray typedArray = getContext().obtainStyledAttributes(attrs, R.styleable.CartView);
+        currentViewLocation = typedArray.getInt(R.styleable.CartView_YLocation, -1);
+
+        if (currentViewLocation == -1) {
+            currentViewEnumLocation = typedArray.getInt(R.styleable.CartView_YEnumLocation, -1);
+            if (currentViewEnumLocation == -1) {
+
+                throw new RuntimeException("请在xml里配置CartView_YLocation或者CartView_YEnumLocation属性");
+            }
+        }
+
+        typedArray.recycle();
+    }
+
+    /**
+     * 处理xml参数为enum时,所对应的值
+     */
+    private void handleEnumLocation() {
+        switch (currentViewEnumLocation) {
+            case LOCATION_TOP:
+                currentViewLocation = 0;
+                break;
+
+            case LOCATION_CENTER:
+                currentViewLocation = scrHeight / 2;
+                break;
+
+            case LOCATION_BOTTOM:
+
+                currentViewLocation = scrHeight;
+                break;
+        }
     }
 
     @Override
@@ -69,33 +111,42 @@ public class CartView extends RelativeLayout implements View.OnClickListener {
         if (ev.getAction() == MotionEvent.ACTION_DOWN) {
             mDownX = (int) (ev.getRawX() + 0.5);
             mDownY = (int) (ev.getRawY() + 0.5);
+
+            mRawDownY = mDownY;
+            mRawDownX = mDownX;
         }
         if (ev.getAction() == MotionEvent.ACTION_MOVE) {
+            mMoveX = (int) (ev.getRawX() + 0.5f);
+            mMoveY = (int) (ev.getRawY() + 0.5f);
             return true;
         }
         return super.onInterceptTouchEvent(ev);
     }
 
     private int mDownX;
+    private int mRawDownX;
     private int mDownY;
+    private int mRawDownY;
     private int mDiffX;
     private int mDiffY;
     private int mMoveX;
     private int mMoveY;
 
+    private int mUpDiffX;
+    private int mUpDiffY;
+
     private int mCurrentX;
     private int mCurrentY;
     private static final int MOVE_DIFFY = 100;
+    private static final int DiffClickOrTouch = 30;
+
+    private int currentViewLocation;
+
+    private int currentViewEnumLocation;
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         switch (event.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-
-                mDownX = (int) (event.getRawX() + 0.5);
-                mDownY = (int) (event.getRawY() + 0.5);
-
-                break;
 
             case MotionEvent.ACTION_MOVE:
 
@@ -120,10 +171,42 @@ public class CartView extends RelativeLayout implements View.OnClickListener {
 
                 handleEgdeValue(mMoveX, mMoveY);
 
+                mUpDiffX = Math.abs(mCurrentX - mRawDownX);
+                mUpDiffY = Math.abs(mCurrentY - mRawDownY);
+
                 moveSelfToEdge();
+
+                if (mUpDiffX > DiffClickOrTouch ||
+                        mUpDiffY > DiffClickOrTouch) {
+                    //判断是否是滑动
+                    return true;
+                }
+                //点击事件处理
+                if (mListener != null) {
+                    mListener.onclick(this);
+                }
                 break;
         }
         return false;
+    }
+
+    @Override
+    protected void onFinishInflate() {
+        super.onFinishInflate();
+        WindowManager wm = (WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE);
+        scrWidth = wm.getDefaultDisplay().getWidth();
+        scrHeight = wm.getDefaultDisplay().getHeight();
+        switch (currentViewEnumLocation) {
+            case LOCATION_TOP:
+                break;
+
+            case LOCATION_CENTER:
+                mCurrentCartLocationX = scrWidth - getWidth() - DIFF_BOTTOM_HEIGHT_VALUE;
+                break;
+
+            case LOCATION_BOTTOM:
+                break;
+        }
     }
 
     /**
@@ -131,9 +214,11 @@ public class CartView extends RelativeLayout implements View.OnClickListener {
      */
     private void handleTopEdge() {
 
-        WindowManager wm = (WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE);
-        scrWidth = wm.getDefaultDisplay().getWidth();
-        scrHeight = wm.getDefaultDisplay().getHeight();
+//        WindowManager wm = (WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE);
+//        scrWidth = wm.getDefaultDisplay().getWidth();
+//        scrHeight = wm.getDefaultDisplay().getHeight();
+
+        handleEnumLocation();
 
         if (mMoveY < 200) {
             moveEdge();
@@ -142,45 +227,57 @@ public class CartView extends RelativeLayout implements View.OnClickListener {
     }
 
     private void moveEdge() {
-        ((ViewGroup) getParent()).scrollTo(scrWidth - mMoveX - getWidth(), 0);
+        ((ViewGroup) getParent()).scrollTo(scrWidth - mMoveX - getWidth(), 0 + currentViewLocation - getHeight());
     }
 
     private int mCurrentCartLocationX;
 
+
     private void moveSelfToEdge() {
-        if (getCurrentRawX() > scrWidth / 2) {
-            //滑动到右边
+        if (mUpDiffX > DiffClickOrTouch || mUpDiffY > DiffClickOrTouch) {
+            if (getCurrentRawX() > scrWidth / 2) {
+                //滑动到右边
 //            ((ViewGroup) getParent()).scrollTo(0, -getCurrentRawY());
-            if (getCurrentRawY() > scrHeight - getHeight() - MOVE_DIFFY) {
+//            if (getCurrentRawY() > scrHeight - getHeight() - MOVE_DIFFY) {
+//
+//                mScroller.startScroll(getCurrentRawX() - scrWidth + getWidth(), getCurrentRawY() - CURRENT_VIEW_DIFFY - currentViewLocation,
+//                        scrWidth - getCurrentRawX() - getWidth(), scrHeight - getCurrentRawY() - CURRENT_VIEW_DIFFY);
+//
+//            } else
+                //
 
-                mScroller.startScroll(getCurrentRawX() - scrWidth + getWidth(), getCurrentRawY() - CURRENT_VIEW_DIFFY,
-                        scrWidth - getCurrentRawX() - getWidth(), scrHeight - getCurrentRawY() - CURRENT_VIEW_DIFFY);
+                if (getCurrentRawY() + CURRENT_VIEW_DIFFY < getHeight()) {
 
-            } else if (getCurrentRawY() + CURRENT_VIEW_DIFFY < getHeight()) {
+                    mScroller.startScroll(getCurrentRawX() - scrWidth + getWidth(), 0 - currentViewLocation + getHeight(), scrWidth - getCurrentRawX() - getWidth(), 0);
 
-                mScroller.startScroll(getCurrentRawX() - scrWidth + getWidth(), 0, scrWidth - getCurrentRawX() - getWidth(), 0);
+                } else {
+                    mScroller.startScroll(getCurrentRawX() - scrWidth + getWidth(), getCurrentRawY() - currentViewLocation + getHeight(),
+                            scrWidth - getCurrentRawX() - getWidth(), 0);
+                }
+
+
+                mCurrentCartLocationX = scrWidth - getWidth();
 
             } else {
-                mScroller.startScroll(getCurrentRawX() - scrWidth + getWidth(), getCurrentRawY(), scrWidth - getCurrentRawX() - getWidth(), 0);
-            }
+                //滑动到左边
+            /*if (getCurrentRawY() > scrHeight - getHeight() - MOVE_DIFFY) {
 
-            mCurrentCartLocationX = scrWidth - getWidth();
-
-        } else {
-            //滑动到左边
-            if (getCurrentRawY() > scrHeight - getHeight() - MOVE_DIFFY) {
-
-                mScroller.startScroll(-scrWidth + getCurrentRawX() + getWidth(), getCurrentRawY() - CURRENT_VIEW_DIFFY,
+                mScroller.startScroll(-scrWidth + getCurrentRawX() + getWidth(), getCurrentRawY() -
+                                CURRENT_VIEW_DIFFY - currentViewLocation + getHeight(),
                         -getCurrentRawX(), scrHeight - getCurrentRawY() - CURRENT_VIEW_DIFFY);
 
-            } else if (getCurrentRawY() + CURRENT_VIEW_DIFFY < getHeight()) {
+            } else*/
+                if (getCurrentRawY() + CURRENT_VIEW_DIFFY < getHeight()) {
 
-                mScroller.startScroll(-scrWidth + getCurrentRawX() + getWidth(), 0, -getCurrentRawX(), 0);
-            } else {
+                    mScroller.startScroll(-scrWidth + getCurrentRawX() + getWidth(),
+                            0 - currentViewLocation + getHeight(), -getCurrentRawX(), 0);
+                } else {
 
-                mScroller.startScroll(-scrWidth + getCurrentRawX() + getWidth(), getCurrentRawY(), -getCurrentRawX(), 0);
+                    mScroller.startScroll(-scrWidth + getCurrentRawX() + getWidth(),
+                            getCurrentRawY() - currentViewLocation + getHeight(), -getCurrentRawX(), 0);
+                }
+                mCurrentCartLocationX = 0;
             }
-            mCurrentCartLocationX = 0;
         }
 
         invalidate();
@@ -295,5 +392,26 @@ public class CartView extends RelativeLayout implements View.OnClickListener {
     @Override
     public void onClick(View v) {
         Toast.makeText(mAct, "onclick", Toast.LENGTH_SHORT).show();
+    }
+
+    /**
+     * 设置购物车的数量
+     *
+     * @param num
+     */
+    private boolean isFirstSet = true;//是否为第一次设置,因为如果是第一次的话,需要手动设置到numView上
+
+    public void setCurrentNum(int num) {
+        mConfig.setCurrentNum(num);
+        if (isFirstSet) {
+            detail_cart_num_tv.setText(num + "");
+            isFirstSet = false;
+        }
+    }
+
+    private ClickListener mListener;
+
+    public void setClickListener(ClickListener listener) {
+        mListener = listener;
     }
 }

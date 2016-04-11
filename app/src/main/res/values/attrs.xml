@@ -2,5 +2,11 @@
 <resources>
     <declare-styleable name="CartView">
         <attr name="cartScr" format="integer" />
+        <attr name="YEnumLocation" format="enum">
+            <enum name="center" value="1" />
+            <enum name="top" value="0" />
+            <enum name="bottom" value="2" />
+        </attr>
+        <attr name="YLocation" format="integer" />
     </declare-styleable>
 </resources>
