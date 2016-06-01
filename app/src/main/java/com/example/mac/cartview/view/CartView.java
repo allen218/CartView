@@ -115,12 +115,7 @@ public class CartView extends RelativeLayout implements View.OnClickListener {
             mRawDownY = mDownY;
             mRawDownX = mDownX;
         }
-        if (ev.getAction() == MotionEvent.ACTION_MOVE) {
-            mMoveX = (int) (ev.getRawX() + 0.5f);
-            mMoveY = (int) (ev.getRawY() + 0.5f);
-            return true;
-        }
-        return super.onInterceptTouchEvent(ev);
+        return true;
     }
 
     private int mDownX;
@@ -187,7 +182,7 @@ public class CartView extends RelativeLayout implements View.OnClickListener {
                 }
                 break;
         }
-        return false;
+        return true;
     }
 
     @Override
